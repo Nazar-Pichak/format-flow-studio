@@ -70,7 +70,11 @@ export interface Format {
   label: string;
 }
 
-const VideoConverter = () => {
+interface VideoConverterProps {
+  onCategoryChange: (category: 'video' | 'audio' | 'image' | 'subtitle' | 'special') => void;
+}
+
+const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [outputFormat, setOutputFormat] = useState('mp4');
@@ -224,6 +228,11 @@ const VideoConverter = () => {
     }
   };
 
+  const handleCategoryChange = (category: 'video' | 'audio' | 'image' | 'subtitle' | 'special') => {
+    setSelectedCategory(category);
+    onCategoryChange(category);
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -233,11 +242,11 @@ const VideoConverter = () => {
       <CardContent>
         <Tabs defaultValue="upload" className="w-full">
           <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="video" onClick={() => setSelectedCategory('video')}>Video</TabsTrigger>
-            <TabsTrigger value="audio" onClick={() => setSelectedCategory('audio')}>Audio</TabsTrigger>
-            <TabsTrigger value="image" onClick={() => setSelectedCategory('image')}>Image</TabsTrigger>
-            <TabsTrigger value="subtitle" onClick={() => setSelectedCategory('subtitle')}>Subtitle</TabsTrigger>
-            <TabsTrigger value="special" onClick={() => setSelectedCategory('special')}>Special</TabsTrigger>
+            <TabsTrigger value="video" onClick={() => handleCategoryChange('video')}>Video</TabsTrigger>
+            <TabsTrigger value="audio" onClick={() => handleCategoryChange('audio')}>Audio</TabsTrigger>
+            <TabsTrigger value="image" onClick={() => handleCategoryChange('image')}>Image</TabsTrigger>
+            <TabsTrigger value="subtitle" onClick={() => handleCategoryChange('subtitle')}>Subtitle</TabsTrigger>
+            <TabsTrigger value="special" onClick={() => handleCategoryChange('special')}>Special</TabsTrigger>
           </TabsList>
           
           <TabsContent value="upload" className="space-y-4">

@@ -1,7 +1,38 @@
 
+import { useState } from "react";
 import VideoConverter from "@/components/VideoConverter";
 
 const Index = () => {
+  const [selectedCategory, setSelectedCategory] = useState<'video' | 'audio' | 'image' | 'subtitle' | 'special'>('video');
+
+  const supportedFormats = {
+    video: [
+      'MP4', 'AVI', 'MOV', 'MKV',
+      'FLV', 'WMV', 'WebM', 'MPEG/MPG',
+      '3GP', 'TS', 'M4V'
+    ],
+    audio: [
+      'MP3', 'AAC', 'WAV', 'FLAC',
+      'OGG', 'M4A', 'WMA', 'OPUS',
+      'ALAC', 'AMR'
+    ],
+    image: [
+      'JPG/JPEG', 'PNG', 'BMP', 'TIFF',
+      'GIF', 'WebP'
+    ],
+    subtitle: [
+      'SRT', 'ASS', 'VTT', 'SUB'
+    ],
+    special: [
+      'HLS (M3U8)', 'MPEG-DASH', 'DVD Image (ISO)',
+      'DVD Video (VOB)', 'DV', 'RealMedia (RM)'
+    ]
+  };
+
+  const handleCategoryChange = (category: typeof selectedCategory) => {
+    setSelectedCategory(category);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-accent/30">
       <header className="container mx-auto pt-8 pb-6 px-4">
@@ -9,23 +40,19 @@ const Index = () => {
           Format Flow Studio
         </h1>
         <p className="text-center text-muted-foreground mt-2">
-          Convert your videos to any format with just a few clicks
+          Convert your files to any format with just a few clicks
         </p>
       </header>
       
       <main className="flex-1 container mx-auto px-4 pb-12">
         <div className="max-w-3xl mx-auto">
-          <VideoConverter />
+          <VideoConverter onCategoryChange={handleCategoryChange} />
         </div>
 
         <div className="mt-16 max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold mb-4">Supported Formats</h2>
+          <h2 className="text-2xl font-bold mb-4">Supported {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Formats</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {[
-              'MP4', 'AVI', 'MOV', 'MKV',
-              'FLV', 'WMV', 'WebM', 'MPEG/MPG',
-              '3GP', 'TS', 'M4V'
-            ].map((format) => (
+            {supportedFormats[selectedCategory].map((format) => (
               <div key={format} className="bg-white rounded-lg shadow p-3 text-center">
                 <p className="font-medium">{format}</p>
               </div>
