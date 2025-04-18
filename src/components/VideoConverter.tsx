@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import DropZone from './DropZone';
-import FormatSelector, { Format } from './FormatSelector';
-import ConversionProgress from './ConversionProgress';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, Download, Loader2, RefreshCw } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2 } from 'lucide-react';
+import DropZone from './DropZone';
+import FileInfo from './converter/FileInfo';
+import VideoPreview from './converter/VideoPreview';
+import ConverterControls from './converter/ConverterControls';
+import SettingsTab from './converter/SettingsTab';
+import ConversionProgress from './ConversionProgress';
 
 // Define supported formats
 const videoFormats: Format[] = [
@@ -62,6 +64,11 @@ const specialFormats: Format[] = [
   { value: 'dv', label: 'DV' },
   { value: 'rm', label: 'RealMedia' },
 ];
+
+export interface Format {
+  value: string;
+  label: string;
+}
 
 const VideoConverter = () => {
   const { toast } = useToast();
@@ -206,11 +213,22 @@ const VideoConverter = () => {
     document.body.removeChild(a);
   };
 
+  const getCurrentFormats = () => {
+    switch(selectedCategory) {
+      case 'video': return videoFormats;
+      case 'audio': return audioFormats;
+      case 'image': return imageFormats;
+      case 'subtitle': return subtitleFormats;
+      case 'special': return specialFormats;
+      default: return videoFormats;
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="text-2xl font-bold text-center">Format Flow Studio</CardTitle>
-        <CardDescription className="text-center">Convert your videos to any format with ease</CardDescription>
+        <CardDescription className="text-center">Convert your files to any format with ease</CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="upload" className="w-full">
@@ -234,34 +252,13 @@ const VideoConverter = () => {
                   <DropZone onFileSelected={handleFileSelected} />
                 ) : (
                   <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                      <div>
-                        <p className="text-sm font-medium mb-1">Input File</p>
-                        <p className="text-sm text-muted-foreground mb-4">{selectedFile.name}</p>
-                        <Button 
-                          variant="outline" 
-                          onClick={() => setSelectedFile(null)}
-                          className="w-full"
-                        >
-                          Change File
-                        </Button>
-                      </div>
-                      <div>
-                        <FormatSelector
-                          formats={
-                            selectedCategory === 'video' ? videoFormats :
-                            selectedCategory === 'audio' ? audioFormats :
-                            selectedCategory === 'image' ? imageFormats :
-                            selectedCategory === 'subtitle' ? subtitleFormats :
-                            specialFormats
-                          }
-                          selectedFormat={outputFormat}
-                          onFormatChange={handleFormatChange}
-                          label="Output Format"
-                        />
-                      </div>
-                    </div>
-
+                    <FileInfo
+                      file={selectedFile}
+                      outputFormat={outputFormat}
+                      formats={getCurrentFormats()}
+                      onFormatChange={handleFormatChange}
+                      onFileChange={() => setSelectedFile(null)}
+                    />
                     <div className="mt-6">
                       <ConversionProgress 
                         progress={conversionProgress} 
@@ -270,89 +267,26 @@ const VideoConverter = () => {
                     </div>
                   </>
                 )}
-
-                {convertedVideoUrl && (
-                  <div className="mt-6 space-y-3">
-                    <p className="text-sm font-medium">Preview</p>
-                    <video 
-                      controls 
-                      className="w-full rounded-md border" 
-                      src={convertedVideoUrl}
-                    >
-                      Your browser does not support the video tag.
-                    </video>
-                  </div>
-                )}
+                <VideoPreview url={convertedVideoUrl} />
               </>
             )}
           </TabsContent>
           
           <TabsContent value="settings">
-            <div className="space-y-4">
-              <div className="rounded-md bg-muted/50 p-4">
-                <div className="flex items-center space-x-2">
-                  <Settings className="h-5 w-5 text-muted-foreground" />
-                  <h3 className="text-sm font-medium">Conversion Settings</h3>
-                </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Currently using default conversion settings for optimal quality and compatibility.
-                  Advanced settings will be available in future updates.
-                </p>
-              </div>
-              
-              <div className="rounded-md bg-muted/50 p-4">
-                <h3 className="text-sm font-medium flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                  Privacy
-                </h3>
-                <p className="text-sm text-muted-foreground mt-2">
-                  All processing occurs in your browser. Your files are never uploaded to any server.
-                </p>
-              </div>
-            </div>
+            <SettingsTab />
           </TabsContent>
         </Tabs>
       </CardContent>
       <CardFooter className="flex flex-col sm:flex-row gap-3">
-        {selectedFile && (
-          <>
-            {conversionStatus !== 'converting' && conversionStatus !== 'completed' && (
-              <Button 
-                disabled={loading || !ffmpeg} 
-                onClick={startConversion} 
-                className="w-full sm:w-auto"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading
-                  </>
-                ) : (
-                  'Start Conversion'
-                )}
-              </Button>
-            )}
-            
-            {conversionStatus === 'converting' && (
-              <Button disabled className="w-full sm:w-auto">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Converting...
-              </Button>
-            )}
-            
-            {conversionStatus === 'completed' && (
-              <>
-                <Button onClick={downloadConvertedFile} className="w-full sm:w-auto">
-                  <Download className="mr-2 h-4 w-4" />
-                  Download
-                </Button>
-                <Button variant="outline" onClick={resetConverter} className="w-full sm:w-auto">
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Convert Another
-                </Button>
-              </>
-            )}
-          </>
-        )}
+        <ConverterControls
+          selectedFile={selectedFile}
+          conversionStatus={conversionStatus}
+          loading={loading}
+          ffmpeg={ffmpeg}
+          startConversion={startConversion}
+          downloadConvertedFile={downloadConvertedFile}
+          resetConverter={resetConverter}
+        />
       </CardFooter>
     </Card>
   );
