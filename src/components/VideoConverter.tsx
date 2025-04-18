@@ -11,6 +11,7 @@ import VideoPreview from './converter/VideoPreview';
 import ConverterControls from './converter/ConverterControls';
 import SettingsTab from './converter/SettingsTab';
 import ConversionProgress from './ConversionProgress';
+import { getFFmpegCommandsByCategory, isValidFileType } from '@/utils/conversionService';
 
 // Define supported formats
 const videoFormats: Format[] = [
@@ -107,7 +108,6 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
         
         setFFmpeg(ffmpegInstance);
         setLoading(false);
-        console.log('FFmpeg loaded');
       } catch (error) {
         console.error('Failed to load FFmpeg:', error);
         setLoading(false);
@@ -120,26 +120,21 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
     };
     
     loadFFmpeg();
-    
-    return () => {
-      setConvertedVideoUrl(null);
-    };
   }, [toast]);
 
   const handleFileSelected = (file: File) => {
+    if (!isValidFileType(file, selectedCategory)) {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid File Type',
+        description: `Please select a valid ${selectedCategory} file.`
+      });
+      return;
+    }
     setSelectedFile(file);
     setConversionStatus('idle');
     setConversionProgress(0);
     setConvertedVideoUrl(null);
-  };
-
-  const handleFormatChange = (format: string) => {
-    setOutputFormat(format);
-    if (conversionStatus === 'completed') {
-      setConversionStatus('idle');
-      setConversionProgress(0);
-      setConvertedVideoUrl(null);
-    }
   };
 
   const startConversion = async () => {
@@ -156,24 +151,16 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
       setConversionStatus('converting');
       setConversionProgress(0);
 
-      const inputFileName = 'input' + getFileExtension(selectedFile.name);
-      ffmpeg.writeFile(inputFileName, await fetchFile(selectedFile));
-
+      const inputFileName = `input${getFileExtension(selectedFile.name)}`;
       const outputFileName = `output.${outputFormat}`;
+      
+      await ffmpeg.writeFile(inputFileName, await fetchFile(selectedFile));
 
-      const ffmpegCommand = [
-        '-i', inputFileName,
-        '-c:v', 'libx264',
-        '-preset', 'medium',
-        '-c:a', 'aac',
-        '-strict', 'experimental',
-        outputFileName
-      ];
-
-      await ffmpeg.exec(ffmpegCommand);
+      const commands = getFFmpegCommandsByCategory(inputFileName, outputFileName, selectedCategory);
+      await ffmpeg.exec(commands);
 
       const outputData = await ffmpeg.readFile(outputFileName);
-      const outputBlob = new Blob([outputData], { type: `video/${outputFormat}` });
+      const outputBlob = new Blob([outputData], { type: `${selectedCategory}/${outputFormat}` });
       const url = URL.createObjectURL(outputBlob);
 
       setConvertedVideoUrl(url);
@@ -182,7 +169,7 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
 
       toast({
         title: 'Success',
-        description: 'Video conversion completed successfully!'
+        description: 'File conversion completed successfully!'
       });
     } catch (error) {
       console.error('Conversion error:', error);
@@ -190,7 +177,7 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
       toast({
         variant: 'destructive',
         title: 'Conversion Error',
-        description: 'Failed to convert the video. Please try again.'
+        description: 'Failed to convert the file. Please try again.'
       });
     }
   };
@@ -228,8 +215,21 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
     }
   };
 
+  const handleFormatChange = (format: string) => {
+    setOutputFormat(format);
+    if (conversionStatus === 'completed') {
+      setConversionStatus('idle');
+      setConversionProgress(0);
+      setConvertedVideoUrl(null);
+    }
+  };
+
   const handleCategoryChange = (category: 'video' | 'audio' | 'image' | 'subtitle' | 'special') => {
     setSelectedCategory(category);
+    setSelectedFile(null);
+    setConversionStatus('idle');
+    setConversionProgress(0);
+    setConvertedVideoUrl(null);
     onCategoryChange(category);
   };
 
@@ -240,7 +240,7 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
         <CardDescription className="text-center">Convert your files to any format with ease</CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="upload" className="w-full">
+        <Tabs defaultValue="video" className="w-full">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="video" onClick={() => handleCategoryChange('video')}>Video</TabsTrigger>
             <TabsTrigger value="audio" onClick={() => handleCategoryChange('audio')}>Audio</TabsTrigger>
@@ -249,7 +249,7 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
             <TabsTrigger value="special" onClick={() => handleCategoryChange('special')}>Special</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="upload" className="space-y-4">
+          <TabsContent value="video" className="space-y-4">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-10">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -258,7 +258,7 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
             ) : (
               <>
                 {!selectedFile ? (
-                  <DropZone onFileSelected={handleFileSelected} />
+                  <DropZone onFileSelected={handleFileSelected} category={selectedCategory} />
                 ) : (
                   <>
                     <FileInfo
