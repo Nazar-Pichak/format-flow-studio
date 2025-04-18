@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import DropZone from './DropZone';
@@ -26,6 +25,44 @@ const videoFormats: Format[] = [
   { value: 'm4v', label: 'M4V' },
 ];
 
+const audioFormats: Format[] = [
+  { value: 'mp3', label: 'MP3' },
+  { value: 'aac', label: 'AAC' },
+  { value: 'wav', label: 'WAV' },
+  { value: 'flac', label: 'FLAC' },
+  { value: 'ogg', label: 'OGG' },
+  { value: 'm4a', label: 'M4A' },
+  { value: 'wma', label: 'WMA' },
+  { value: 'opus', label: 'OPUS' },
+  { value: 'alac', label: 'ALAC' },
+  { value: 'amr', label: 'AMR' },
+];
+
+const imageFormats: Format[] = [
+  { value: 'jpg', label: 'JPEG' },
+  { value: 'png', label: 'PNG' },
+  { value: 'bmp', label: 'BMP' },
+  { value: 'tiff', label: 'TIFF' },
+  { value: 'gif', label: 'GIF' },
+  { value: 'webp', label: 'WebP' },
+];
+
+const subtitleFormats: Format[] = [
+  { value: 'srt', label: 'SRT' },
+  { value: 'ass', label: 'ASS' },
+  { value: 'vtt', label: 'VTT' },
+  { value: 'sub', label: 'SUB' },
+];
+
+const specialFormats: Format[] = [
+  { value: 'm3u8', label: 'HLS Streaming' },
+  { value: 'dash', label: 'MPEG-DASH' },
+  { value: 'iso', label: 'DVD Image' },
+  { value: 'vob', label: 'DVD Video' },
+  { value: 'dv', label: 'DV' },
+  { value: 'rm', label: 'RealMedia' },
+];
+
 const VideoConverter = () => {
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -35,9 +72,9 @@ const VideoConverter = () => {
   const [convertedVideoUrl, setConvertedVideoUrl] = useState<string | null>(null);
   const [ffmpeg, setFFmpeg] = useState<FFmpeg | null>(null);
   const [loading, setLoading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<'video' | 'audio' | 'image' | 'subtitle' | 'special'>('video');
 
   useEffect(() => {
-    // Load FFmpeg
     const loadFFmpeg = async () => {
       try {
         setLoading(true);
@@ -51,7 +88,6 @@ const VideoConverter = () => {
           setConversionProgress(Math.round(progress * 100));
         });
         
-        // Load FFmpeg core
         const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
         await ffmpegInstance.load({
           coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
@@ -75,7 +111,6 @@ const VideoConverter = () => {
     loadFFmpeg();
     
     return () => {
-      // Clean up any resources if needed
       setConvertedVideoUrl(null);
     };
   }, [toast]);
@@ -89,7 +124,6 @@ const VideoConverter = () => {
 
   const handleFormatChange = (format: string) => {
     setOutputFormat(format);
-    // Reset conversion if output format changes
     if (conversionStatus === 'completed') {
       setConversionStatus('idle');
       setConversionProgress(0);
@@ -111,27 +145,22 @@ const VideoConverter = () => {
       setConversionStatus('converting');
       setConversionProgress(0);
 
-      // Write the input file to memory
       const inputFileName = 'input' + getFileExtension(selectedFile.name);
       ffmpeg.writeFile(inputFileName, await fetchFile(selectedFile));
 
-      // Get the output filename
       const outputFileName = `output.${outputFormat}`;
 
-      // Build the FFmpeg command
       const ffmpegCommand = [
         '-i', inputFileName,
-        '-c:v', 'libx264', // Use H.264 codec for video
-        '-preset', 'medium', // Balance between speed and quality
-        '-c:a', 'aac', // Use AAC for audio
+        '-c:v', 'libx264',
+        '-preset', 'medium',
+        '-c:a', 'aac',
         '-strict', 'experimental',
         outputFileName
       ];
 
-      // Run the FFmpeg command
       await ffmpeg.exec(ffmpegCommand);
 
-      // Read the output file
       const outputData = await ffmpeg.readFile(outputFileName);
       const outputBlob = new Blob([outputData], { type: `video/${outputFormat}` });
       const url = URL.createObjectURL(outputBlob);
@@ -185,9 +214,12 @@ const VideoConverter = () => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="upload" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="upload">Upload</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="video" onClick={() => setSelectedCategory('video')}>Video</TabsTrigger>
+            <TabsTrigger value="audio" onClick={() => setSelectedCategory('audio')}>Audio</TabsTrigger>
+            <TabsTrigger value="image" onClick={() => setSelectedCategory('image')}>Image</TabsTrigger>
+            <TabsTrigger value="subtitle" onClick={() => setSelectedCategory('subtitle')}>Subtitle</TabsTrigger>
+            <TabsTrigger value="special" onClick={() => setSelectedCategory('special')}>Special</TabsTrigger>
           </TabsList>
           
           <TabsContent value="upload" className="space-y-4">
@@ -216,7 +248,13 @@ const VideoConverter = () => {
                       </div>
                       <div>
                         <FormatSelector
-                          formats={videoFormats}
+                          formats={
+                            selectedCategory === 'video' ? videoFormats :
+                            selectedCategory === 'audio' ? audioFormats :
+                            selectedCategory === 'image' ? imageFormats :
+                            selectedCategory === 'subtitle' ? subtitleFormats :
+                            specialFormats
+                          }
                           selectedFormat={outputFormat}
                           onFormatChange={handleFormatChange}
                           label="Output Format"
