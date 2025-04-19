@@ -26,7 +26,7 @@ export const getFFmpegCommandsByCategory = (
 };
 
 export const isValidFileType = (file: File, category: string): boolean => {
-  const mimeTypes = {
+  const mimeTypes: Record<string, string[]> = {
     video: ['video/'],
     audio: ['audio/'],
     image: ['image/'],
@@ -34,7 +34,12 @@ export const isValidFileType = (file: File, category: string): boolean => {
     special: ['application/x-mpegURL', 'video/MP2T', 'application/x-iso9660-image']
   };
 
-  return mimeTypes[category as keyof typeof mimeTypes]?.some(type => 
+  // Make sure we're checking a valid category
+  if (!category || !mimeTypes[category]) {
+    return false;
+  }
+
+  return mimeTypes[category].some(type => 
     file.type.startsWith(type)
   ) || true; // Temporarily allowing all files for testing
 };

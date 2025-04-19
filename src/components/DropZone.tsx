@@ -1,5 +1,8 @@
+
 import React, { useState, useRef, useCallback } from 'react';
 import { Upload, FilePlus, FileVideo, FileAudio, FileImage, FileText, File } from 'lucide-react';
+import { isValidFileType } from '@/utils/conversionService';
+import { useToast } from '@/hooks/use-toast';
 
 interface DropZoneProps {
   onFileSelected: (file: File) => void;
@@ -10,6 +13,7 @@ const DropZone: React.FC<DropZoneProps> = ({ onFileSelected, category = 'video' 
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const getAcceptedTypes = () => {
     switch (category) {
@@ -71,29 +75,35 @@ const DropZone: React.FC<DropZoneProps> = ({ onFileSelected, category = 'video' 
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
       const file = files[0];
-      if (file.type.startsWith('video/')) {
+      if (isValidFileType(file, category)) {
         setFileName(file.name);
         onFileSelected(file);
       } else {
-        console.error('Please select a video file.');
-        // Could add toast notification here
+        toast({
+          variant: 'destructive',
+          title: 'Invalid File Type',
+          description: `Please select a valid ${category} file.`
+        });
       }
     }
-  }, [onFileSelected]);
+  }, [onFileSelected, category, toast]);
 
   const handleFileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
       const file = files[0];
-      if (file.type.startsWith('video/')) {
+      if (isValidFileType(file, category)) {
         setFileName(file.name);
         onFileSelected(file);
       } else {
-        console.error('Please select a video file.');
-        // Could add toast notification here
+        toast({
+          variant: 'destructive',
+          title: 'Invalid File Type',
+          description: `Please select a valid ${category} file.`
+        });
       }
     }
-  }, [onFileSelected]);
+  }, [onFileSelected, category, toast]);
 
   const handleButtonClick = () => {
     fileInputRef.current?.click();
@@ -101,7 +111,7 @@ const DropZone: React.FC<DropZoneProps> = ({ onFileSelected, category = 'video' 
 
   return (
     <div
-      className={`file-drop-area ${isDragging ? 'dragging' : 'border-muted-foreground/30'}`}
+      className={`file-drop-area border-2 border-dashed rounded-lg p-10 text-center cursor-pointer ${isDragging ? 'bg-primary/5 border-primary' : 'border-muted-foreground/30'}`}
       onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
