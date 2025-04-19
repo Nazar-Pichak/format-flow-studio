@@ -1,131 +1,28 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { toBlobURL, fetchFile } from '@ffmpeg/util';
+import { fetchFile } from '@ffmpeg/util';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LoaderCircle } from 'lucide-react';
-import DropZone from './DropZone';
-import FileInfo from './converter/FileInfo';
-import VideoPreview from './converter/VideoPreview';
 import ConverterControls from './converter/ConverterControls';
-import SettingsTab from './converter/SettingsTab';
-import ConversionProgress from './ConversionProgress';
-import { getFFmpegCommandsByCategory, isValidFileType } from '@/utils/conversionService';
-
-const videoFormats: Format[] = [
-  { value: 'mp4', label: 'MP4' },
-  { value: 'avi', label: 'AVI' },
-  { value: 'mov', label: 'MOV' },
-  { value: 'mkv', label: 'MKV' },
-  { value: 'flv', label: 'FLV' },
-  { value: 'wmv', label: 'WMV' },
-  { value: 'webm', label: 'WebM' },
-  { value: 'mpeg', label: 'MPEG' },
-  { value: '3gp', label: '3GP' },
-  { value: 'ts', label: 'TS' },
-  { value: 'm4v', label: 'M4V' },
-];
-
-const audioFormats: Format[] = [
-  { value: 'mp3', label: 'MP3' },
-  { value: 'aac', label: 'AAC' },
-  { value: 'wav', label: 'WAV' },
-  { value: 'flac', label: 'FLAC' },
-  { value: 'ogg', label: 'OGG' },
-  { value: 'm4a', label: 'M4A' },
-  { value: 'wma', label: 'WMA' },
-  { value: 'opus', label: 'OPUS' },
-  { value: 'alac', label: 'ALAC' },
-  { value: 'amr', label: 'AMR' },
-];
-
-const imageFormats: Format[] = [
-  { value: 'jpg', label: 'JPEG' },
-  { value: 'png', label: 'PNG' },
-  { value: 'bmp', label: 'BMP' },
-  { value: 'tiff', label: 'TIFF' },
-  { value: 'gif', label: 'GIF' },
-  { value: 'webp', label: 'WebP' },
-];
-
-const subtitleFormats: Format[] = [
-  { value: 'srt', label: 'SRT' },
-  { value: 'ass', label: 'ASS' },
-  { value: 'vtt', label: 'VTT' },
-  { value: 'sub', label: 'SUB' },
-];
-
-const specialFormats: Format[] = [
-  { value: 'm3u8', label: 'HLS Streaming' },
-  { value: 'dash', label: 'MPEG-DASH' },
-  { value: 'iso', label: 'DVD Image' },
-  { value: 'vob', label: 'DVD Video' },
-  { value: 'dv', label: 'DV' },
-  { value: 'rm', label: 'RealMedia' },
-];
-
-export interface Format {
-  value: string;
-  label: string;
-}
+import TabContent from './converter/TabContent';
+import { useFFmpeg } from '@/hooks/useFFmpeg';
+import { isValidFileType, getFFmpegCommandsByCategory } from '@/utils/conversionService';
+import { FileCategory, ConversionStatus, Format, videoFormats, audioFormats, imageFormats, subtitleFormats, specialFormats } from '@/types/converter';
 
 interface VideoConverterProps {
-  onCategoryChange: (category: 'video' | 'audio' | 'image' | 'subtitle' | 'special') => void;
+  onCategoryChange: (category: FileCategory) => void;
 }
 
 const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
   const { toast } = useToast();
+  const { ffmpeg, loading } = useFFmpeg();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [outputFormat, setOutputFormat] = useState('mp4');
   const [conversionProgress, setConversionProgress] = useState(0);
-  const [conversionStatus, setConversionStatus] = useState<'idle' | 'converting' | 'completed' | 'error'>('idle');
+  const [conversionStatus, setConversionStatus] = useState<ConversionStatus>('idle');
   const [convertedVideoUrl, setConvertedVideoUrl] = useState<string | null>(null);
-  const [ffmpeg, setFFmpeg] = useState<FFmpeg | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<'video' | 'audio' | 'image' | 'subtitle' | 'special'>('video');
-
-  useEffect(() => {
-    const loadFFmpeg = async () => {
-      try {
-        setLoading(true);
-        const ffmpegInstance = new FFmpeg();
-        
-        ffmpegInstance.on('log', ({ message }) => {
-          console.log(message);
-        });
-        
-        ffmpegInstance.on('progress', ({ progress }) => {
-          setConversionProgress(Math.round(progress * 100));
-        });
-        
-        // Instead of direct URLs, use toBlobURL to load the core files
-        const baseURL = 'https://unpkg.com/@ffmpeg/core@0.11.0/dist';
-        const coreURL = await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript');
-        const wasmURL = await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm');
-        
-        await ffmpegInstance.load({
-          coreURL,
-          wasmURL
-        });
-        
-        console.log('FFmpeg loaded successfully');
-        setFFmpeg(ffmpegInstance);
-        setLoading(false);
-      } catch (error) {
-        console.error('Failed to load FFmpeg:', error);
-        setLoading(false);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to load FFmpeg. Please refresh and try again.'
-        });
-      }
-    };
-    
-    loadFFmpeg();
-  }, [toast]);
+  const [selectedCategory, setSelectedCategory] = useState<FileCategory>('video');
 
   const handleFileSelected = (file: File) => {
     if (!isValidFileType(file, selectedCategory)) {
@@ -209,7 +106,7 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
     document.body.removeChild(a);
   };
 
-  const getCurrentFormats = () => {
+  const getCurrentFormats = (): Format[] => {
     switch(selectedCategory) {
       case 'video': return videoFormats;
       case 'audio': return audioFormats;
@@ -229,7 +126,7 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
     }
   };
 
-  const handleCategoryChange = (category: 'video' | 'audio' | 'image' | 'subtitle' | 'special') => {
+  const handleCategoryChange = (category: FileCategory) => {
     setSelectedCategory(category);
     setSelectedFile(null);
     setConversionStatus('idle');
@@ -254,174 +151,22 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
             <TabsTrigger value="special" onClick={() => handleCategoryChange('special')}>Special</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="video" className="space-y-4">
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-20">
-                <LoaderCircle className="h-12 w-12 animate-spin text-primary mb-4" />
-                <p className="text-lg font-medium text-primary">Loading FFmpeg...</p>
-                <p className="mt-2 text-sm text-muted-foreground">This may take a few moments</p>
-              </div>
-            ) : (
-              <>
-                {!selectedFile ? (
-                  <DropZone onFileSelected={handleFileSelected} category={selectedCategory} />
-                ) : (
-                  <>
-                    <FileInfo
-                      file={selectedFile}
-                      outputFormat={outputFormat}
-                      formats={getCurrentFormats()}
-                      onFormatChange={handleFormatChange}
-                      onFileChange={() => setSelectedFile(null)}
-                    />
-                    <div className="mt-6">
-                      <ConversionProgress 
-                        progress={conversionProgress} 
-                        status={conversionStatus} 
-                      />
-                    </div>
-                  </>
-                )}
-                <VideoPreview url={convertedVideoUrl} />
-              </>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="audio" className="space-y-4">
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-20">
-                <LoaderCircle className="h-12 w-12 animate-spin text-primary mb-4" />
-                <p className="text-lg font-medium text-primary">Loading FFmpeg...</p>
-                <p className="mt-2 text-sm text-muted-foreground">This may take a few moments</p>
-              </div>
-            ) : (
-              <>
-                {!selectedFile ? (
-                  <DropZone onFileSelected={handleFileSelected} category={selectedCategory} />
-                ) : (
-                  <>
-                    <FileInfo
-                      file={selectedFile}
-                      outputFormat={outputFormat}
-                      formats={getCurrentFormats()}
-                      onFormatChange={handleFormatChange}
-                      onFileChange={() => setSelectedFile(null)}
-                    />
-                    <div className="mt-6">
-                      <ConversionProgress 
-                        progress={conversionProgress} 
-                        status={conversionStatus} 
-                      />
-                    </div>
-                  </>
-                )}
-                <VideoPreview url={convertedVideoUrl} />
-              </>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="image" className="space-y-4">
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-20">
-                <LoaderCircle className="h-12 w-12 animate-spin text-primary mb-4" />
-                <p className="text-lg font-medium text-primary">Loading FFmpeg...</p>
-                <p className="mt-2 text-sm text-muted-foreground">This may take a few moments</p>
-              </div>
-            ) : (
-              <>
-                {!selectedFile ? (
-                  <DropZone onFileSelected={handleFileSelected} category={selectedCategory} />
-                ) : (
-                  <>
-                    <FileInfo
-                      file={selectedFile}
-                      outputFormat={outputFormat}
-                      formats={getCurrentFormats()}
-                      onFormatChange={handleFormatChange}
-                      onFileChange={() => setSelectedFile(null)}
-                    />
-                    <div className="mt-6">
-                      <ConversionProgress 
-                        progress={conversionProgress} 
-                        status={conversionStatus} 
-                      />
-                    </div>
-                  </>
-                )}
-                <VideoPreview url={convertedVideoUrl} />
-              </>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="subtitle" className="space-y-4">
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-20">
-                <LoaderCircle className="h-12 w-12 animate-spin text-primary mb-4" />
-                <p className="text-lg font-medium text-primary">Loading FFmpeg...</p>
-                <p className="mt-2 text-sm text-muted-foreground">This may take a few moments</p>
-              </div>
-            ) : (
-              <>
-                {!selectedFile ? (
-                  <DropZone onFileSelected={handleFileSelected} category={selectedCategory} />
-                ) : (
-                  <>
-                    <FileInfo
-                      file={selectedFile}
-                      outputFormat={outputFormat}
-                      formats={getCurrentFormats()}
-                      onFormatChange={handleFormatChange}
-                      onFileChange={() => setSelectedFile(null)}
-                    />
-                    <div className="mt-6">
-                      <ConversionProgress 
-                        progress={conversionProgress} 
-                        status={conversionStatus} 
-                      />
-                    </div>
-                  </>
-                )}
-                <VideoPreview url={convertedVideoUrl} />
-              </>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="special" className="space-y-4">
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-20">
-                <LoaderCircle className="h-12 w-12 animate-spin text-primary mb-4" />
-                <p className="text-lg font-medium text-primary">Loading FFmpeg...</p>
-                <p className="mt-2 text-sm text-muted-foreground">This may take a few moments</p>
-              </div>
-            ) : (
-              <>
-                {!selectedFile ? (
-                  <DropZone onFileSelected={handleFileSelected} category={selectedCategory} />
-                ) : (
-                  <>
-                    <FileInfo
-                      file={selectedFile}
-                      outputFormat={outputFormat}
-                      formats={getCurrentFormats()}
-                      onFormatChange={handleFormatChange}
-                      onFileChange={() => setSelectedFile(null)}
-                    />
-                    <div className="mt-6">
-                      <ConversionProgress 
-                        progress={conversionProgress} 
-                        status={conversionStatus} 
-                      />
-                    </div>
-                  </>
-                )}
-                <VideoPreview url={convertedVideoUrl} />
-              </>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="settings">
-            <SettingsTab />
-          </TabsContent>
+          {['video', 'audio', 'image', 'subtitle', 'special'].map((category) => (
+            <TabsContent key={category} value={category} className="space-y-4">
+              <TabContent
+                loading={loading}
+                selectedFile={selectedFile}
+                outputFormat={outputFormat}
+                formats={getCurrentFormats()}
+                conversionProgress={conversionProgress}
+                conversionStatus={conversionStatus}
+                convertedVideoUrl={convertedVideoUrl}
+                category={category as FileCategory}
+                onFileSelected={handleFileSelected}
+                onFormatChange={handleFormatChange}
+              />
+            </TabsContent>
+          ))}
         </Tabs>
       </CardContent>
       <CardFooter className="flex flex-col sm:flex-row gap-3">
