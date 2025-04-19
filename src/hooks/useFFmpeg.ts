@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { toBlobURL } from '@ffmpeg/util';
+import { type FFmpeg } from '@ffmpeg/ffmpeg';
+import { createFFmpeg } from '@ffmpeg/ffmpeg';
 import { useToast } from '@/hooks/use-toast';
 
 export const useFFmpeg = () => {
@@ -13,21 +12,14 @@ export const useFFmpeg = () => {
     const loadFFmpeg = async () => {
       try {
         setLoading(true);
-        const ffmpegInstance = new FFmpeg();
-        
-        ffmpegInstance.on('log', ({ message }) => {
-          console.log(message);
+
+        const ffmpegInstance = createFFmpeg({
+          log: true,
+          corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js',
         });
-        
-        const baseURL = 'https://unpkg.com/@ffmpeg/core@0.11.0/dist';
-        const coreURL = await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript');
-        const wasmURL = await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm');
-        
-        await ffmpegInstance.load({
-          coreURL,
-          wasmURL
-        });
-        
+
+        await ffmpegInstance.load();
+
         console.log('FFmpeg loaded successfully');
         setFFmpeg(ffmpegInstance);
       } catch (error) {
@@ -35,15 +27,15 @@ export const useFFmpeg = () => {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Failed to load FFmpeg. Please refresh and try again.'
+          description: 'Failed to load FFmpeg. Please refresh and try again.',
         });
       } finally {
         setLoading(false);
       }
     };
-    
+
     loadFFmpeg();
   }, [toast]);
 
-  return { ffmpeg, loading };
+  return { ffmpeg, loading, ready: !!ffmpeg && !loading };
 };

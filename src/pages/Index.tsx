@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import VideoConverter from "@/components/VideoConverter";
+import VideoConverter from "@/components/Converter";
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<'video' | 'audio' | 'image' | 'subtitle' | 'special'>('video');
@@ -68,21 +68,21 @@ const Index = () => {
                     <span className="text-primary font-bold text-xl">1</span>
                   </div>
                   <h3 className="font-medium text-lg mb-2">Upload</h3>
-                  <p className="text-muted-foreground">Drop your video file or browse to select one from your device</p>
+                  <p className="text-muted-foreground">Drop your file or browse to select one from your device</p>
                 </div>
                 <div className="bg-white rounded-xl shadow-md p-6">
                   <div className="bg-primary/10 rounded-full w-12 h-12 flex items-center justify-center mb-4">
                     <span className="text-primary font-bold text-xl">2</span>
                   </div>
                   <h3 className="font-medium text-lg mb-2">Select Format</h3>
-                  <p className="text-muted-foreground">Choose the output format you want to convert your video to</p>
+                  <p className="text-muted-foreground">Choose the output format you want to convert your file to</p>
                 </div>
                 <div className="bg-white rounded-xl shadow-md p-6">
                   <div className="bg-primary/10 rounded-full w-12 h-12 flex items-center justify-center mb-4">
                     <span className="text-primary font-bold text-xl">3</span>
                   </div>
                   <h3 className="font-medium text-lg mb-2">Convert & Download</h3>
-                  <p className="text-muted-foreground">Start conversion and download your new video file when complete</p>
+                  <p className="text-muted-foreground">Start conversion and download your new file when complete</p>
                 </div>
               </div>
             </section>
@@ -91,7 +91,7 @@ const Index = () => {
               <h2 className="text-2xl font-bold mb-4">Privacy First</h2>
               <div className="bg-white rounded-xl shadow-md p-6">
                 <p className="text-muted-foreground">
-                  All video processing happens directly in your browser using WebAssembly technology.
+                  All processing happens directly in your browser using WebAssembly technology.
                   Your files are never uploaded to any server, ensuring complete privacy and security.
                 </p>
               </div>

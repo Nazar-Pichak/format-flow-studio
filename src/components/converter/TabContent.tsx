@@ -4,7 +4,6 @@ import LoadingState from './LoadingState';
 import DropZone from '../DropZone';
 import FileInfo from './FileInfo';
 import ConversionProgress from '../ConversionProgress';
-import VideoPreview from './VideoPreview';
 import { Format } from '@/types/converter';
 
 interface TabContentProps {
@@ -14,7 +13,7 @@ interface TabContentProps {
   formats: Format[];
   conversionProgress: number;
   conversionStatus: ConversionStatus;
-  convertedVideoUrl: string | null;
+  convertedUrl: string | null;
   category: FileCategory;
   onFileSelected: (file: File) => void;
   onFormatChange: (format: string) => void;
@@ -27,7 +26,7 @@ const TabContent = ({
   formats,
   conversionProgress,
   conversionStatus,
-  convertedVideoUrl,
+  convertedUrl,
   category,
   onFileSelected,
   onFormatChange,
@@ -57,7 +56,6 @@ const TabContent = ({
           </div>
         </>
       )}
-      <VideoPreview url={convertedVideoUrl} />
     </>
   );
 };

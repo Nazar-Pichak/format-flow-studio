@@ -14,14 +14,14 @@ interface VideoConverterProps {
   onCategoryChange: (category: FileCategory) => void;
 }
 
-const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
+const Converter = ({ onCategoryChange }: VideoConverterProps) => {
   const { toast } = useToast();
   const { ffmpeg, loading } = useFFmpeg();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [outputFormat, setOutputFormat] = useState('mp4');
   const [conversionProgress, setConversionProgress] = useState(0);
   const [conversionStatus, setConversionStatus] = useState<ConversionStatus>('idle');
-  const [convertedVideoUrl, setConvertedVideoUrl] = useState<string | null>(null);
+  const [convertedUrl, setConvertedUrl] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<FileCategory>('video');
 
   const handleFileSelected = (file: File) => {
@@ -36,7 +36,7 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
     setSelectedFile(file);
     setConversionStatus('idle');
     setConversionProgress(0);
-    setConvertedVideoUrl(null);
+    setConvertedUrl(null);
   };
 
   const startConversion = async () => {
@@ -55,17 +55,18 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
 
       const inputFileName = `input${getFileExtension(selectedFile.name)}`;
       const outputFileName = `output.${outputFormat}`;
-      
-      await ffmpeg.writeFile(inputFileName, await fetchFile(selectedFile));
+
+      // ✅ Fix: Correctly write to FFmpeg's virtual filesystem
+      await ffmpeg.FS('writeFile', inputFileName, await fetchFile(selectedFile));
 
       const commands = getFFmpegCommandsByCategory(inputFileName, outputFileName, selectedCategory);
-      await ffmpeg.exec(commands);
-
-      const outputData = await ffmpeg.readFile(outputFileName);
+      await ffmpeg.run(...commands);
+      
+      const outputData = await ffmpeg.FS('readFile', outputFileName);
       const outputBlob = new Blob([outputData], { type: `${selectedCategory}/${outputFormat}` });
       const url = URL.createObjectURL(outputBlob);
 
-      setConvertedVideoUrl(url);
+      setConvertedUrl(url);
       setConversionStatus('completed');
       setConversionProgress(100);
 
@@ -84,6 +85,7 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
     }
   };
 
+
   const getFileExtension = (filename: string) => {
     return '.' + filename.split('.').pop();
   };
@@ -92,14 +94,14 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
     setSelectedFile(null);
     setConversionStatus('idle');
     setConversionProgress(0);
-    setConvertedVideoUrl(null);
+    setConvertedUrl(null);
   };
 
   const downloadConvertedFile = () => {
-    if (!convertedVideoUrl) return;
-    
+    if (!convertedUrl) return;
+
     const a = document.createElement('a');
-    a.href = convertedVideoUrl;
+    a.href = convertedUrl;
     a.download = `converted.${outputFormat}`;
     document.body.appendChild(a);
     a.click();
@@ -107,7 +109,7 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
   };
 
   const getCurrentFormats = (): Format[] => {
-    switch(selectedCategory) {
+    switch (selectedCategory) {
       case 'video': return videoFormats;
       case 'audio': return audioFormats;
       case 'image': return imageFormats;
@@ -122,7 +124,7 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
     if (conversionStatus === 'completed') {
       setConversionStatus('idle');
       setConversionProgress(0);
-      setConvertedVideoUrl(null);
+      setConvertedUrl(null);
     }
   };
 
@@ -131,7 +133,7 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
     setSelectedFile(null);
     setConversionStatus('idle');
     setConversionProgress(0);
-    setConvertedVideoUrl(null);
+    setConvertedUrl(null);
     onCategoryChange(category);
   };
 
@@ -150,7 +152,7 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
             <TabsTrigger value="subtitle" onClick={() => handleCategoryChange('subtitle')}>Subtitle</TabsTrigger>
             <TabsTrigger value="special" onClick={() => handleCategoryChange('special')}>Special</TabsTrigger>
           </TabsList>
-          
+
           {['video', 'audio', 'image', 'subtitle', 'special'].map((category) => (
             <TabsContent key={category} value={category} className="space-y-4">
               <TabContent
@@ -160,7 +162,7 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
                 formats={getCurrentFormats()}
                 conversionProgress={conversionProgress}
                 conversionStatus={conversionStatus}
-                convertedVideoUrl={convertedVideoUrl}
+                convertedUrl={convertedUrl}
                 category={category as FileCategory}
                 onFileSelected={handleFileSelected}
                 onFormatChange={handleFormatChange}
@@ -184,4 +186,4 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
   );
 };
 
-export default VideoConverter;
+export default Converter;
