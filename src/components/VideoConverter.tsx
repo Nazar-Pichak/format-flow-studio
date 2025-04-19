@@ -4,7 +4,7 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2 } from 'lucide-react';
+import { LoaderCircle } from 'lucide-react';
 import DropZone from './DropZone';
 import FileInfo from './converter/FileInfo';
 import VideoPreview from './converter/VideoPreview';
@@ -13,7 +13,6 @@ import SettingsTab from './converter/SettingsTab';
 import ConversionProgress from './ConversionProgress';
 import { getFFmpegCommandsByCategory, isValidFileType } from '@/utils/conversionService';
 
-// Define supported formats
 const videoFormats: Format[] = [
   { value: 'mp4', label: 'MP4' },
   { value: 'avi', label: 'AVI' },
@@ -251,9 +250,142 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
           
           <TabsContent value="video" className="space-y-4">
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-10">
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                <p className="mt-4 text-sm text-muted-foreground">Loading FFmpeg...</p>
+              <div className="flex flex-col items-center justify-center py-20">
+                <LoaderCircle className="h-12 w-12 animate-spin text-primary mb-4" />
+                <p className="text-lg font-medium text-primary">Loading FFmpeg...</p>
+                <p className="mt-2 text-sm text-muted-foreground">This may take a few moments</p>
+              </div>
+            ) : (
+              <>
+                {!selectedFile ? (
+                  <DropZone onFileSelected={handleFileSelected} category={selectedCategory} />
+                ) : (
+                  <>
+                    <FileInfo
+                      file={selectedFile}
+                      outputFormat={outputFormat}
+                      formats={getCurrentFormats()}
+                      onFormatChange={handleFormatChange}
+                      onFileChange={() => setSelectedFile(null)}
+                    />
+                    <div className="mt-6">
+                      <ConversionProgress 
+                        progress={conversionProgress} 
+                        status={conversionStatus} 
+                      />
+                    </div>
+                  </>
+                )}
+                <VideoPreview url={convertedVideoUrl} />
+              </>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="audio" className="space-y-4">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <LoaderCircle className="h-12 w-12 animate-spin text-primary mb-4" />
+                <p className="text-lg font-medium text-primary">Loading FFmpeg...</p>
+                <p className="mt-2 text-sm text-muted-foreground">This may take a few moments</p>
+              </div>
+            ) : (
+              <>
+                {!selectedFile ? (
+                  <DropZone onFileSelected={handleFileSelected} category={selectedCategory} />
+                ) : (
+                  <>
+                    <FileInfo
+                      file={selectedFile}
+                      outputFormat={outputFormat}
+                      formats={getCurrentFormats()}
+                      onFormatChange={handleFormatChange}
+                      onFileChange={() => setSelectedFile(null)}
+                    />
+                    <div className="mt-6">
+                      <ConversionProgress 
+                        progress={conversionProgress} 
+                        status={conversionStatus} 
+                      />
+                    </div>
+                  </>
+                )}
+                <VideoPreview url={convertedVideoUrl} />
+              </>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="image" className="space-y-4">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <LoaderCircle className="h-12 w-12 animate-spin text-primary mb-4" />
+                <p className="text-lg font-medium text-primary">Loading FFmpeg...</p>
+                <p className="mt-2 text-sm text-muted-foreground">This may take a few moments</p>
+              </div>
+            ) : (
+              <>
+                {!selectedFile ? (
+                  <DropZone onFileSelected={handleFileSelected} category={selectedCategory} />
+                ) : (
+                  <>
+                    <FileInfo
+                      file={selectedFile}
+                      outputFormat={outputFormat}
+                      formats={getCurrentFormats()}
+                      onFormatChange={handleFormatChange}
+                      onFileChange={() => setSelectedFile(null)}
+                    />
+                    <div className="mt-6">
+                      <ConversionProgress 
+                        progress={conversionProgress} 
+                        status={conversionStatus} 
+                      />
+                    </div>
+                  </>
+                )}
+                <VideoPreview url={convertedVideoUrl} />
+              </>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="subtitle" className="space-y-4">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <LoaderCircle className="h-12 w-12 animate-spin text-primary mb-4" />
+                <p className="text-lg font-medium text-primary">Loading FFmpeg...</p>
+                <p className="mt-2 text-sm text-muted-foreground">This may take a few moments</p>
+              </div>
+            ) : (
+              <>
+                {!selectedFile ? (
+                  <DropZone onFileSelected={handleFileSelected} category={selectedCategory} />
+                ) : (
+                  <>
+                    <FileInfo
+                      file={selectedFile}
+                      outputFormat={outputFormat}
+                      formats={getCurrentFormats()}
+                      onFormatChange={handleFormatChange}
+                      onFileChange={() => setSelectedFile(null)}
+                    />
+                    <div className="mt-6">
+                      <ConversionProgress 
+                        progress={conversionProgress} 
+                        status={conversionStatus} 
+                      />
+                    </div>
+                  </>
+                )}
+                <VideoPreview url={convertedVideoUrl} />
+              </>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="special" className="space-y-4">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <LoaderCircle className="h-12 w-12 animate-spin text-primary mb-4" />
+                <p className="text-lg font-medium text-primary">Loading FFmpeg...</p>
+                <p className="mt-2 text-sm text-muted-foreground">This may take a few moments</p>
               </div>
             ) : (
               <>
