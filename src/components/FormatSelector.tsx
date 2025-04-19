@@ -39,6 +39,9 @@ const FormatSelector = ({
   // Ensure formats is always an array, even if undefined is passed
   const formatOptions = Array.isArray(formats) ? formats : [];
 
+  // Find the selected format or use a default label
+  const selectedLabel = formatOptions.find((format) => format.value === selectedFormat)?.label || "Select format...";
+
   return (
     <div className="flex flex-col space-y-1.5">
       <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -52,9 +55,7 @@ const FormatSelector = ({
             aria-expanded={open}
             className="justify-between"
           >
-            {selectedFormat
-              ? formatOptions.find((format) => format.value === selectedFormat)?.label || "Select format..."
-              : "Select format..."}
+            {selectedLabel}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -63,26 +64,30 @@ const FormatSelector = ({
             <CommandInput placeholder="Search format..." />
             <CommandEmpty>No format found.</CommandEmpty>
             <CommandGroup>
-              {formatOptions.map((format) => (
-                <CommandItem
-                  key={format.value}
-                  value={format.value}
-                  onSelect={() => {
-                    onFormatChange(format.value);
-                    setOpen(false);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedFormat === format.value
-                        ? "opacity-100"
-                        : "opacity-0"
-                    )}
-                  />
-                  {format.label}
-                </CommandItem>
-              ))}
+              {formatOptions.length > 0 ? (
+                formatOptions.map((format) => (
+                  <CommandItem
+                    key={format.value}
+                    value={format.value}
+                    onSelect={() => {
+                      onFormatChange(format.value);
+                      setOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        selectedFormat === format.value
+                          ? "opacity-100"
+                          : "opacity-0"
+                      )}
+                    />
+                    {format.label}
+                  </CommandItem>
+                ))
+              ) : (
+                <CommandItem disabled>No formats available</CommandItem>
+              )}
             </CommandGroup>
           </Command>
         </PopoverContent>
