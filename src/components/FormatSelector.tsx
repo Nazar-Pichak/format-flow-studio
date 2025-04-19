@@ -29,12 +29,15 @@ interface FormatSelectorProps {
 }
 
 const FormatSelector = ({
-  formats,
+  formats = [],
   selectedFormat,
   onFormatChange,
   label,
 }: FormatSelectorProps) => {
   const [open, setOpen] = useState(false);
+  
+  // Ensure formats is always an array, even if undefined is passed
+  const formatOptions = Array.isArray(formats) ? formats : [];
 
   return (
     <div className="flex flex-col space-y-1.5">
@@ -50,7 +53,7 @@ const FormatSelector = ({
             className="justify-between"
           >
             {selectedFormat
-              ? formats.find((format) => format.value === selectedFormat)?.label
+              ? formatOptions.find((format) => format.value === selectedFormat)?.label || "Select format..."
               : "Select format..."}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
@@ -60,7 +63,7 @@ const FormatSelector = ({
             <CommandInput placeholder="Search format..." />
             <CommandEmpty>No format found.</CommandEmpty>
             <CommandGroup>
-              {formats.map((format) => (
+              {formatOptions.map((format) => (
                 <CommandItem
                   key={format.value}
                   value={format.value}
