@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile } from '@ffmpeg/util';
+import { toBlobURL } from '@ffmpeg/util';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoaderCircle } from 'lucide-react';
@@ -100,11 +100,14 @@ const VideoConverter = ({ onCategoryChange }: VideoConverterProps) => {
           setConversionProgress(Math.round(progress * 100));
         });
         
-        // Use CDN URL that's known to work reliably
+        // Instead of direct URLs, use toBlobURL to load the core files
+        const baseURL = 'https://unpkg.com/@ffmpeg/core@0.11.0/dist';
+        const coreURL = await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript');
+        const wasmURL = await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm');
+        
         await ffmpegInstance.load({
-          // Using jsdelivr CDN which is reliable for npm packages
-          coreURL: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/ffmpeg-core.js',
-          wasmURL: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/ffmpeg-core.wasm'
+          coreURL,
+          wasmURL
         });
         
         console.log('FFmpeg loaded successfully');
