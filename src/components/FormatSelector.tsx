@@ -60,36 +60,39 @@ const FormatSelector = ({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="p-0">
-          <Command>
-            <CommandInput placeholder="Search format..." />
-            <CommandEmpty>No format found.</CommandEmpty>
-            <CommandGroup>
-              {formatOptions.length > 0 ? (
-                formatOptions.map((format) => (
-                  <CommandItem
-                    key={format.value}
-                    value={format.value}
-                    onSelect={() => {
-                      onFormatChange(format.value);
-                      setOpen(false);
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        selectedFormat === format.value
-                          ? "opacity-100"
-                          : "opacity-0"
-                      )}
-                    />
-                    {format.label}
-                  </CommandItem>
-                ))
-              ) : (
-                <CommandItem disabled>No formats available</CommandItem>
-              )}
-            </CommandGroup>
-          </Command>
+          {/* Key fix: Rendering null when popover is closed prevents cmdk from throwing errors */}
+          {!open ? null : (
+            <Command>
+              <CommandInput placeholder="Search format..." />
+              <CommandEmpty>No format found.</CommandEmpty>
+              <CommandGroup>
+                {formatOptions.length > 0 ? (
+                  formatOptions.map((format) => (
+                    <CommandItem
+                      key={format.value}
+                      value={format.value}
+                      onSelect={() => {
+                        onFormatChange(format.value);
+                        setOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          selectedFormat === format.value
+                            ? "opacity-100"
+                            : "opacity-0"
+                        )}
+                      />
+                      {format.label}
+                    </CommandItem>
+                  ))
+                ) : (
+                  <CommandItem disabled>No formats available</CommandItem>
+                )}
+              </CommandGroup>
+            </Command>
+          )}
         </PopoverContent>
       </Popover>
     </div>
