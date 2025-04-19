@@ -25,7 +25,12 @@ export const getFFmpegCommandsByCategory = (
   }
 };
 
-export const isValidFileType = (file: File, category: string): boolean => {
+export const isValidFileType = (file: File | null, category: string): boolean => {
+  // Handle null or undefined file
+  if (!file) {
+    return false;
+  }
+  
   const mimeTypes: Record<string, string[]> = {
     video: ['video/'],
     audio: ['audio/'],
