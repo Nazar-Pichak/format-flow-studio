@@ -10,11 +10,11 @@ import { useFFmpeg } from '@/hooks/useFFmpeg';
 import { isValidFileType, getFFmpegCommandsByCategory } from '@/utils/conversionService';
 import { FileCategory, ConversionStatus, Format, videoFormats, audioFormats, imageFormats, subtitleFormats, specialFormats } from '@/types/converter';
 
-interface VideoConverterProps {
+interface ConverterProps {
   onCategoryChange: (category: FileCategory) => void;
 }
 
-const Converter = ({ onCategoryChange }: VideoConverterProps) => {
+const Converter = ({ onCategoryChange }: ConverterProps) => {
   const { toast } = useToast();
   const { ffmpeg, loading } = useFFmpeg();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -24,7 +24,9 @@ const Converter = ({ onCategoryChange }: VideoConverterProps) => {
   const [convertedUrl, setConvertedUrl] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<FileCategory>('video');
 
+
   const handleFileSelected = (file: File) => {
+    
     if (!isValidFileType(file, selectedCategory)) {
       toast({
         variant: 'destructive',
@@ -54,6 +56,7 @@ const Converter = ({ onCategoryChange }: VideoConverterProps) => {
       setConversionProgress(0);
 
       const inputFileName = `input${getFileExtension(selectedFile.name)}`;
+      console.log(inputFileName);
       const outputFileName = `output.${outputFormat}`;
 
       // ✅ Fix: Correctly write to FFmpeg's virtual filesystem

@@ -4,7 +4,7 @@ import { Upload, FilePlus, FileVideo, FileAudio, FileImage, FileText, File } fro
 import { isValidFileType } from '@/utils/conversionService';
 import { useToast } from '@/hooks/use-toast';
 
-interface DropZoneProps {
+export interface DropZoneProps {
   onFileSelected: (file: File) => void;
   category?: 'video' | 'audio' | 'image' | 'subtitle' | 'special';
 }
@@ -73,6 +73,7 @@ const DropZone: React.FC<DropZoneProps> = ({ onFileSelected, category = 'video' 
     setIsDragging(false);
 
     const files = e.dataTransfer.files;
+    
     if (files && files.length > 0) {
       const file = files[0];
       if (isValidFileType(file, category)) {

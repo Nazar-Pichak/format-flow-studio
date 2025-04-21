@@ -31,6 +31,7 @@ const TabContent = ({
   onFileSelected,
   onFormatChange,
 }: TabContentProps) => {
+
   if (loading) {
     return <LoadingState />;
   }
