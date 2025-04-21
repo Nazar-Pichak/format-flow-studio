@@ -43,7 +43,7 @@ const FormatSelector = ({
   const selectedLabel = formatOptions.find((format) => format.value === selectedFormat)?.label || "Select format...";
 
   return (
-    <div className="flex flex-col space-y-1.5">
+    <div className="flex flex-col space-y-1.5 pt-10">
       <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
         {label}
       </label>
