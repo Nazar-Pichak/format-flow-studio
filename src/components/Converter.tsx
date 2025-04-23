@@ -144,7 +144,7 @@ const Converter = ({ onCategoryChange }: ConverterProps) => {
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="text-2xl font-bold text-center">Format Flow Studio</CardTitle>
-        <CardDescription className="text-center">Convert your files to any format with ease</CardDescription>
+        <CardDescription className="text-center">Convert your media files with ease</CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="video" className="w-full">
