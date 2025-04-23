@@ -40,7 +40,7 @@ const Index = () => {
           Format Flow Studio
         </h1>
         <p className="text-center text-muted-foreground mt-2">
-          Convert your files to any format with just a few clicks
+          Convert your media files to popular format with just a few clicks
         </p>
       </header>
       
