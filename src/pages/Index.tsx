@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import VideoConverter from "@/components/Converter";
+import Converter from "@/components/Converter";
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<'video' | 'audio' | 'image' | 'subtitle' | 'special'>('video');
@@ -8,17 +8,16 @@ const Index = () => {
   const supportedFormats = {
     video: [
       'MP4', 'AVI', 'MOV', 'MKV',
-      'FLV', 'WMV', 'WebM', 'MPEG/MPG',
-      '3GP', 'TS', 'M4V'
+      'FLV', 'WMV', 'WebM', 'MPEG',
+      'MPG', '3GP', 'TS', 'M4V'
     ],
     audio: [
       'MP3', 'AAC', 'WAV', 'FLAC',
-      'OGG', 'M4A', 'WMA', 'OPUS',
-      'ALAC', 'AMR'
+      'OGG', 'M4A', 'WMA', 'OPUS'
     ],
     image: [
-      'JPG/JPEG', 'PNG', 'BMP', 'TIFF',
-      'GIF', 'WebP'
+      'JPG', 'JPEG', 'PNG', 'BMP', 'TIFF',
+      'TIF', 'WebP' 
     ],
     subtitle: [
       'SRT', 'ASS', 'VTT', 'SUB'
@@ -46,7 +45,7 @@ const Index = () => {
       
       <main className="flex-1 container mx-auto px-4 pb-12">
         <div className="max-w-3xl mx-auto">
-          <VideoConverter onCategoryChange={handleCategoryChange} />
+          <Converter onCategoryChange={handleCategoryChange} />
         </div>
 
         <div className="mt-16 max-w-3xl mx-auto">

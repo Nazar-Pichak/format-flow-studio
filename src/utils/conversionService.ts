@@ -37,7 +37,7 @@ export const getFFmpegCommandsByCategory = (
           return [...base, '-c:v', 'mpeg2video', '-c:a', 'mp2', outputFile];
 
         case '3gp':
-          return [...base, '-c:v', 'h263', '-c:a', 'aac', outputFile];
+          return [...base, '-c:v', 'libx264', '-c:a', 'aac', '-f', '3gp', outputFile];
 
         case 'ts':
           return [...base, '-c:v', 'libx264', '-c:a', 'aac', '-f', 'mpegts', outputFile];
@@ -73,46 +73,34 @@ export const getFFmpegCommandsByCategory = (
           return [...base, '-vn', '-c:a', 'wmav2', '-b:a', '192k', outputFile];
 
         case 'opus':
-          return [...base, '-vn', '-c:a', 'libopus', '-b:a', '96k', outputFile];
+          return [...base, '-vn', '-ar', '48000', '-ac', '2', '-c:a', 'libopus', '-b:a', '96k', '-vbr', 'on', outputFile];
 
-        case 'alac':
-          return [...base, '-vn', '-c:a', 'alac', outputFile];
-
-        case 'amr':
-          // AMR-NB requires 8000 Hz mono input
-          return [...base, '-vn', '-ar', '8000', '-ac', '1', '-c:a', 'libopencore_amrnb', outputFile];
-
-        default:
-          return [...base, '-vn', '-c:a', 'aac', outputFile];
       }
 
-
-    case 'image':
-      switch (ext) {
-        case 'jpg':
-        case 'jpeg':
-          return [...base, '-frames:v', '1', '-q:v', '2', outputFile]; // High-quality JPEG
-
-        case 'png':
-          return [...base, '-frames:v', '1', '-compression_level', '3', outputFile];
-
-        case 'bmp':
-          return [...base, '-frames:v', '1', outputFile]; // BMP is uncompressed
-
-        case 'tiff':
-        case 'tif':
-          return [...base, '-frames:v', '1', '-compression_algo', 'deflate', outputFile];
-
-        case 'gif':
-          return [...base, '-vf', 'fps=10,scale=320:-1:flags=lanczos', '-t', '5', outputFile]; // 5s looping gif
-
-        case 'webp':
-          return [...base, '-frames:v', '1', '-lossless', '1', outputFile];
-
-        default:
-          return [...base, '-frames:v', '1', outputFile];
-      }
-
+      case 'image':
+        switch (ext) {
+          case 'jpg':
+            return [...base, '-frames:v', '1', '-q:v', '2', outputFile]; // High-quality JPG
+      
+          case 'jpeg':
+            return [...base, '-frames:v', '1', '-q:v', '2', outputFile]; // High-quality JPEG
+      
+          case 'png':
+            return [...base, '-frames:v', '1', '-compression_level', '3', outputFile];
+      
+          case 'bmp':
+            return [...base, '-frames:v', '1', outputFile]; // BMP is uncompressed
+      
+          case 'tiff':
+            return [...base, '-frames:v', '1', '-compression_algo', 'deflate', '-compression_level', '3', outputFile]; // TIFF with deflate compression
+      
+          case 'tif':
+            return [...base, '-frames:v', '1', '-compression_algo', 'deflate', '-compression_level', '3', outputFile]; // TIFF with deflate compression
+      
+          case 'webp':
+            return [...base, '-frames:v', '1', '-lossless', '1', outputFile];
+        }
+      
 
     case 'subtitle':
       switch (ext) {
@@ -125,11 +113,9 @@ export const getFFmpegCommandsByCategory = (
         case 'vtt':
           return [...base, '-c:s', 'webvtt', outputFile];
 
-        case 'sub':
-          return [...base, '-c:s', 'mov_text', outputFile]; // .sub can be ambiguous, 'mov_text' is safe for mp4
+        case 'sub':  // For .sub (MicroDVD)
+          return [...base, '-c:s', 'subrip', outputFile];
 
-        default:
-          return [...base, '-c:s', 'copy', outputFile];
       }
 
 
@@ -159,29 +145,30 @@ export const getFFmpegCommandsByCategory = (
           return [...base, '-c', 'copy', outputFile]; // fallback
       }
 
-}};
+  }
+};
 
 
-  export const isValidFileType = (file: File | null, category: string): boolean => {
-    // Handle null or undefined file
-    if (!file) {
-      return false;
-    }
+export const isValidFileType = (file: File | null, category: string): boolean => {
+  // Handle null or undefined file
+  if (!file) {
+    return false;
+  }
 
-    const mimeTypes: Record<string, string[]> = {
-      video: ['video/'],
-      audio: ['audio/'],
-      image: ['image/'],
-      subtitle: ['text/plain', 'text/vtt', 'application/x-subrip'],
-      special: ['application/x-mpegURL', 'video/MP2T', 'application/x-iso9660-image']
-    };
-
-    // Make sure we're checking a valid category
-    if (!category || !mimeTypes[category]) {
-      return false;
-    }
-
-    return mimeTypes[category].some(type =>
-      file.type.startsWith(type)
-    ) || true; // Temporarily allowing all files for testing
+  const mimeTypes: Record<string, string[]> = {
+    video: ['video/'],
+    audio: ['audio/'],
+    image: ['image/'],
+    subtitle: ['text/plain', 'text/vtt', 'application/x-subrip'],
+    special: ['application/x-mpegURL', 'video/MP2T', 'application/x-iso9660-image']
   };
+
+  // Make sure we're checking a valid category
+  if (!category || !mimeTypes[category]) {
+    return false;
+  }
+
+  return mimeTypes[category].some(type =>
+    file.type.startsWith(type)
+  ) || true; // Temporarily allowing all files for testing
+};

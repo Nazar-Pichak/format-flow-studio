@@ -18,7 +18,7 @@ const Converter = ({ onCategoryChange }: ConverterProps) => {
   const { toast } = useToast();
   const { ffmpeg, loading } = useFFmpeg();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [outputFormat, setOutputFormat] = useState('mp4');
+  const [outputFormat, setOutputFormat] = useState(null as string | null);
   const [conversionProgress, setConversionProgress] = useState(0);
   const [conversionStatus, setConversionStatus] = useState<ConversionStatus>('idle');
   const [convertedUrl, setConvertedUrl] = useState<string | null>(null);
@@ -52,11 +52,20 @@ const Converter = ({ onCategoryChange }: ConverterProps) => {
     }
 
     try {
+
+      if (!outputFormat) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Please select an output format.'
+        });
+        return;
+      }
+
       setConversionStatus('converting');
       setConversionProgress(0);
 
       const inputFileName = `input${getFileExtension(selectedFile.name)}`;
-      console.log(inputFileName);
       const outputFileName = `output.${outputFormat}`;
 
       // ✅ Fix: Correctly write to FFmpeg's virtual filesystem
@@ -118,7 +127,6 @@ const Converter = ({ onCategoryChange }: ConverterProps) => {
       case 'image': return imageFormats;
       case 'subtitle': return subtitleFormats;
       case 'special': return specialFormats;
-      default: return videoFormats;
     }
   };
 
