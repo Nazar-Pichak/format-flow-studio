@@ -10,7 +10,6 @@ Format Flow Studio is a free and versatile online web converter designed to hand
 ## Features
 
 - **Multi-format Support**: Convert between popular audio, video, and image formats.
-- **Customizable Settings**: Adjust resolution, bitrate, and other parameters.
 - **Web-based Convenience**: No installation required, works on any device with a browser.
 - **Fast and Reliable**: Optimized for high performance and accuracy.
 
