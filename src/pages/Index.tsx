@@ -99,10 +99,13 @@ const Index = () => {
         </div>
       </main>
 
-      <footer className="bg-white py-6 border-t">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-muted-foreground text-sm">
-            Format Flow Studio © {new Date().getFullYear()} | Powered by FFmpeg
+      <footer className="border-t bg-white py-6">
+        <div className="container mx-auto flex flex-col items-center gap-2 px-4 text-center text-sm text-muted-foreground">
+          <p>
+            © {new Date().getFullYear()} Created by Nazar Pichak
+          </p>
+          <p>
+            Format Flow Studio <span aria-hidden="true">|</span> Powered by FFmpeg
           </p>
         </div>
       </footer>
